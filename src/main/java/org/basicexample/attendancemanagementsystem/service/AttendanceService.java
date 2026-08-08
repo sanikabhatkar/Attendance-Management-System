@@ -87,7 +87,7 @@ public class AttendanceService {
     }
 
     // Delete attendance by ID
-    public ResponseEntity<ResponseStructure<String>> deleteAttendanceById (Attendance attendance, int id){
+    public ResponseEntity<ResponseStructure<String>> deleteAttendanceById (int id){
             ResponseStructure<String> structure = new ResponseStructure<>();
 
         Optional<Attendance> checkRecord = attendanceRepository.findById(id);

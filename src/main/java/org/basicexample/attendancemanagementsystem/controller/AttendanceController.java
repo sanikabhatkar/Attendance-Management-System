@@ -39,8 +39,8 @@ public class AttendanceController {
     }
 
     @DeleteMapping(value = "/deleteAttendance/{id}")
-    public ResponseEntity<ResponseStructure<String>> deleteAttendanceById (@RequestBody Attendance attendance, @PathVariable int id){
-        return attendanceService.deleteAttendanceById(attendance, id);
+    public ResponseEntity<ResponseStructure<String>> deleteAttendanceById (@PathVariable int id){
+        return attendanceService.deleteAttendanceById(id);
     }
 
 }
