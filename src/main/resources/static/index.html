@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Register — Test Console</title>
+    <style>
+        :root{
+            --paper: #eef0e9;
+            --ink: #1f2a1f;
+            --ledger-line: #c9cdb8;
+            --present: #35664a;
+            --present-bg: #dbe8dd;
+            --absent: #9a3b32;
+            --absent-bg: #f0dcd8;
+            --accent: #a3552e;
+            --panel: #ffffff;
+            --shadow: 0 1px 2px rgba(31,42,31,0.08), 0 4px 12px rgba(31,42,31,0.05);
+            --mono: 'Courier New', Courier, monospace;
+            --serif: Georgia, 'Times New Roman', serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        body{
+            margin:0;
+            background:var(--paper);
+            color:var(--ink);
+            font-family: var(--mono);
+            padding: 2.5rem 1.5rem 4rem;
+        }
+
+        .wrap{ max-width: 960px; margin: 0 auto; }
+
+        header{
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-end;
+            border-bottom: 3px double var(--ink);
+            padding-bottom: 0.6rem;
+            margin-bottom: 1.8rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        header h1{
+            font-size: 1.9rem;
+            margin:0;
+            letter-spacing: 0.02em;
+        }
+        header .tag{
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #566356;
+        }
+
+        .conn{
+            display:flex;
+            gap:0.6rem;
+            align-items:center;
+            margin-bottom: 2rem;
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+        .conn label{ color:#566356; }
+        .conn input{
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid var(--ink);
+            background: var(--panel);
+            color: var(--ink);
+            min-width: 260px;
+            border-radius: 2px;
+        }
+        .dot{
+            width:8px; height:8px; border-radius:50%;
+            background: #999; flex-shrink:0;
+        }
+        .dot.ok{ background: var(--present); }
+        .dot.bad{ background: var(--absent); }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        @media (max-width: 760px){ .grid{ grid-template-columns: 1fr; } }
+
+        .card{
+            background: var(--panel);
+            border: 1px solid var(--ledger-line);
+            box-shadow: var(--shadow);
+            padding: 1.4rem 1.5rem;
+            border-radius: 3px;
+        }
+        .card h2{
+            font-size: 1.05rem;
+            margin: 0 0 0.2rem;
+            display:flex;
+            align-items:baseline;
+            gap: 0.5rem;
+        }
+        .card h2 .num{
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 0 0.35rem;
+            border-radius: 2px;
+        }
+        .card .sub{
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: #566356;
+            margin: 0 0 1rem;
+        }
+
+        .field{ margin-bottom: 0.85rem; }
+        .field label{
+            display:block;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #566356;
+            margin-bottom: 0.3rem;
+        }
+        .field input, .field select{
+            width:100%;
+            padding: 0.5rem 0.6rem;
+            border: 1px solid var(--ledger-line);
+            border-bottom: 2px solid var(--ink);
+            background: #fbfbf8;
+            font-family: var(--mono);
+            font-size: 0.95rem;
+            color: var(--ink);
+            border-radius: 2px;
+        }
+        .field input:focus, .field select:focus{
+            outline: none;
+            border-bottom-color: var(--accent);
+        }
+
+        button{
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: var(--ink);
+            color: var(--paper);
+            border: none;
+            padding: 0.6rem 1.1rem;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        button:hover{ background: var(--accent); }
+        button:active{ transform: translateY(1px); }
+        button.ghost{
+            background: transparent;
+            color: var(--ink);
+            border: 1px solid var(--ink);
+        }
+        button.ghost:hover{ background: var(--ink); color: var(--paper); }
+
+        .msg{
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            margin-top: 0.8rem;
+            padding: 0.55rem 0.7rem;
+            border-radius: 2px;
+            display:none;
+            word-break: break-word;
+        }
+        .msg.show{ display:block; }
+        .msg.ok{ background: var(--present-bg); color: var(--present); border: 1px solid var(--present); }
+        .msg.err{ background: var(--absent-bg); color: var(--absent); border: 1px solid var(--absent); }
+
+        .register{
+            background: var(--panel);
+            border: 1px solid var(--ledger-line);
+            box-shadow: var(--shadow);
+            border-radius: 3px;
+            padding: 1.4rem 1.5rem 1.8rem;
+            margin-top: 1.5rem;
+        }
+        .register-head{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+        .register-head h2{ margin:0; font-size: 1.05rem; }
+        .register-actions{ display:flex; gap: 0.6rem; align-items:center; flex-wrap: wrap; }
+
+        table{
+            width:100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        thead th{
+            text-align:left;
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #566356;
+            border-bottom: 2px solid var(--ink);
+            padding: 0.5rem 0.6rem;
+        }
+        tbody td{
+            padding: 0.6rem;
+            border-bottom: 1px solid var(--ledger-line);
+        }
+        tbody tr:hover{ background: rgba(163,85,46,0.05); }
+        .pill{
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .pill.present{ background: var(--present-bg); color: var(--present); }
+        .pill.absent{ background: var(--absent-bg); color: var(--absent); }
+        .rowbtn{
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            padding: 0.3rem 0.55rem;
+            background: transparent;
+            border: 1px solid var(--ink);
+            color: var(--ink);
+        }
+        .rowbtn:hover{ background: var(--ink); color: var(--paper); }
+
+        .empty{
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            color: #566356;
+            padding: 1.2rem 0;
+            text-align:center;
+        }
+
+        footer{
+            margin-top: 2.5rem;
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            color: #7a8579;
+            border-top: 1px solid var(--ledger-line);
+            padding-top: 0.8rem;
+        }
+        footer code{
+            background: rgba(31,42,31,0.06);
+            padding: 0.1rem 0.35rem;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <header>
+        <div>
+            <h1>Attendance Register</h1>
+            <div class="tag">Manual test console — no Postman required (Sanika Bhatkar)</div>
+        </div>
+    </header>
+
+    <div class="conn">
+        <span class="dot" id="connDot"></span>
+        <label for="baseUrl">Server:</label>
+        <input type="text" id="baseUrl" value="http://localhost:8080" spellcheck="false">
+        <button class="ghost" id="pingBtn" type="button">Check connection</button>
+        <span id="connMsg" style="color:#566356;"></span>
+    </div>
+
+    <div class="grid">
+
+        <!-- ADD ATTENDANCE -->
+        <div class="card">
+            <h2><span class="num">01</span> Mark Attendance</h2>
+            <p class="sub">POST /addAttendance</p>
+            <div class="field">
+                <label for="addName">Name</label>
+                <input type="text" id="addName" placeholder="e.g. John Doe">
+            </div>
+            <div class="field">
+                <label for="addStatus">Status</label>
+                <select id="addStatus">
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="addRemarks">Remarks</label>
+                <input type="text" id="addRemarks" placeholder="e.g. On time / Late by 10 min">
+            </div>
+            <button id="addBtn" type="button">Add record</button>
+            <div class="msg" id="addMsg"></div>
+        </div>
+
+        <!-- UPDATE ATTENDANCE -->
+        <div class="card">
+            <h2><span class="num">02</span> Update Attendance</h2>
+            <p class="sub">PUT /updateAttendance/{id}</p>
+            <div class="field">
+                <label for="updId">Record ID</label>
+                <input type="number" id="updId" placeholder="e.g. 3">
+            </div>
+            <div class="field">
+                <label for="updName">Name</label>
+                <input type="text" id="updName" placeholder="e.g. John Doe">
+            </div>
+            <div class="field">
+                <label for="updStatus">Status</label>
+                <select id="updStatus">
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="updRemarks">Remarks</label>
+                <input type="text" id="updRemarks" placeholder="e.g. On time / Late by 10 min">
+            </div>
+            <button id="updBtn" type="button">Update record</button>
+            <div class="msg" id="updMsg"></div>
+        </div>
+
+    </div>
+
+    <!-- VIEW BY DATE -->
+    <div class="card" style="margin-bottom:1.5rem;">
+        <h2><span class="num">03</span> View by Date</h2>
+        <p class="sub">GET /getAttendance/{date}</p>
+        <div style="display:flex; gap:0.8rem; align-items:flex-end; flex-wrap:wrap;">
+            <div class="field" style="flex:1; min-width:200px; margin-bottom:0;">
+                <label for="dateInput">Date</label>
+                <input type="date" id="dateInput">
+            </div>
+            <button id="dateBtn" type="button">Fetch date</button>
+            <button class="ghost" id="clearDateBtn" type="button">Show all instead</button>
+        </div>
+        <div class="msg" id="dateMsg"></div>
+    </div>
+
+    <!-- REGISTER TABLE -->
+    <div class="register">
+        <div class="register-head">
+            <h2 id="tableTitle">All Attendance Records</h2>
+            <div class="register-actions">
+                <span class="tag" id="rowCount" style="font-family:var(--mono); font-size:0.72rem; color:#566356;"></span>
+                <button class="ghost" id="refreshBtn" type="button">Refresh</button>
+            </div>
+        </div>
+        <div id="tableHolder">
+            <div class="empty">No data loaded yet. Click "Refresh" to fetch records.</div>
+        </div>
+    </div>
+
+    <footer>
+        Reads <code>baseUrl</code> above and calls your Spring Boot endpoints directly from the browser.
+        If requests fail with a CORS error, add <code>@CrossOrigin(origins = "*")</code> to <code>AttendanceController</code>
+        (or configure a global CORS mapping), then restart the server.
+
+        ~ Created by Sanika Bhatkar.
+    </footer>
+
+</div>
+
+<script>
+    const $ = (id) => document.getElementById(id);
+
+    function getBase(){
+        return $('baseUrl').value.trim().replace(/\/+$/,'');
+    }
+
+    function showMsg(el, text, isError){
+        el.textContent = text;
+        el.className = 'msg show ' + (isError ? 'err' : 'ok');
+    }
+
+    async function callApi(path, options){
+        const res = await fetch(getBase() + path, options);
+        let body = null;
+        try { body = await res.json(); } catch(e) { /* no body */ }
+        if(!res.ok){
+            const errMsg = (body && body.message) ? body.message : ('HTTP ' + res.status);
+            throw new Error(errMsg);
+        }
+        return body;
+    }
+
+    // ---- Connection check ----
+    $('pingBtn').addEventListener('click', async () => {
+        const dot = $('connDot'), msg = $('connMsg');
+        msg.textContent = 'Checking...';
+        try{
+            await callApi('/getAllAttendance', { method: 'GET' });
+            dot.className = 'dot ok';
+            msg.textContent = 'Connected';
+        }catch(e){
+            // even a 404/no-records error means the server responded, which is a good sign
+            if(e.message && e.message !== 'Failed to fetch'){
+                dot.className = 'dot ok';
+                msg.textContent = 'Server reachable (' + e.message + ')';
+            } else {
+                dot.className = 'dot bad';
+                msg.textContent = 'Cannot reach server — check URL, CORS, and that Spring Boot is running';
+            }
+        }
+    });
+
+    // ---- Add attendance ----
+    $('addBtn').addEventListener('click', async () => {
+        const msgEl = $('addMsg');
+        const payload = {
+            name: $('addName').value.trim(),
+            status: $('addStatus').value,
+            remarks: $('addRemarks').value.trim()
+        };
+        if(!payload.name || !payload.remarks){
+            showMsg(msgEl, 'Name and remarks are required.', true);
+            return;
+        }
+        try{
+            const res = await callApi('/addAttendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            showMsg(msgEl, (res && res.message) || 'Added successfully.', false);
+            $('addName').value = ''; $('addRemarks').value = '';
+            loadAll();
+        }catch(e){
+            showMsg(msgEl, 'Failed: ' + e.message, true);
+        }
+    });
+
+    // ---- Update attendance ----
+    $('updBtn').addEventListener('click', async () => {
+        const msgEl = $('updMsg');
+        const id = $('updId').value.trim();
+        if(!id){
+            showMsg(msgEl, 'Record ID is required.', true);
+            return;
+        }
+        const payload = {
+            name: $('updName').value.trim(),
+            status: $('updStatus').value,
+            remarks: $('updRemarks').value.trim()
+        };
+        try{
+            const res = await callApi('/updateAttendance/' + encodeURIComponent(id), {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            showMsg(msgEl, (res && res.message) || 'Updated successfully.', false);
+            loadAll();
+        }catch(e){
+            showMsg(msgEl, 'Failed: ' + e.message, true);
+        }
+    });
+
+    // ---- View by date ----
+    $('dateBtn').addEventListener('click', async () => {
+        const msgEl = $('dateMsg');
+        const date = $('dateInput').value;
+        if(!date){
+            showMsg(msgEl, 'Pick a date first.', true);
+            return;
+        }
+        try{
+            const res = await callApi('/getAttendance/' + date, { method: 'GET' });
+            msgEl.className = 'msg';
+            renderTable(res.data || [], 'Attendance for ' + date);
+        }catch(e){
+            showMsg(msgEl, e.message, true);
+            renderTable([], 'Attendance for ' + date);
+        }
+    });
+
+    $('clearDateBtn').addEventListener('click', () => {
+        $('dateMsg').className = 'msg';
+        $('dateInput').value = '';
+        loadAll();
+    });
+
+    $('refreshBtn').addEventListener('click', loadAll);
+
+    async function loadAll(){
+        try{
+            const res = await callApi('/getAllAttendance', { method: 'GET' });
+            renderTable(res.data || [], 'All Attendance Records');
+        }catch(e){
+            renderTable([], 'All Attendance Records');
+        }
+    }
+
+    function renderTable(records, title){
+        $('tableTitle').textContent = title;
+        $('rowCount').textContent = records.length + (records.length === 1 ? ' record' : ' records');
+        const holder = $('tableHolder');
+
+        if(!records.length){
+            holder.innerHTML = '<div class="empty">No records found.</div>';
+            return;
+        }
+
+        let rows = records.map(r => {
+            const statusClass = (r.status || '').toLowerCase() === 'present' ? 'present' : 'absent';
+            return `<tr>
+        <td>${r.id}</td>
+        <td>${escapeHtml(r.name)}</td>
+        <td><span class="pill ${statusClass}">${escapeHtml(r.status)}</span></td>
+        <td>${escapeHtml(r.remarks)}</td>
+        <td>${escapeHtml(r.date)}</td>
+        <td><button class="rowbtn" onclick="editRow(${r.id}, '${escapeAttr(r.name)}', '${escapeAttr(r.status)}', '${escapeAttr(r.remarks)}')">Edit</button></td>
+      </tr>`;
+        }).join('');
+
+        holder.innerHTML = `<table>
+      <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Remarks</th><th>Date</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+    }
+
+    function editRow(id, name, status, remarks){
+        $('updId').value = id;
+        $('updName').value = name;
+        $('updStatus').value = status;
+        $('updRemarks').value = remarks;
+        $('updId').closest('.card').scrollIntoView({ behavior:'smooth', block:'center' });
+    }
+    window.editRow = editRow;
+
+    function escapeHtml(str){
+        if(str === undefined || str === null) return '';
+        return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+    function escapeAttr(str){
+        return escapeHtml(str).replace(/'/g, "\\'");
+    }
+
+    // auto-load on open
+    loadAll();
+</script>
+</body>
+</html>
