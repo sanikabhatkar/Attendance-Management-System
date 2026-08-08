@@ -86,4 +86,23 @@ public class AttendanceService {
         throw new AttendanceNotFoundException("Attendance Record for the following Date: " + date + " does not exist");
     }
 
+    // Delete attendance by ID
+    public ResponseEntity<ResponseStructure<String>> deleteAttendanceById (Attendance attendance, int id){
+            ResponseStructure<String> structure = new ResponseStructure<>();
+
+        Optional<Attendance> checkRecord = attendanceRepository.findById(id);
+
+        if(checkRecord.isPresent()){
+
+            attendanceRepository.deleteById(id);
+            structure.setMessage("The attendance for ID :" + id + "has been deleted successfully!");
+            structure.setStatus(HttpStatus.NO_CONTENT.value());
+            structure.setData("The attendance record has been deleted successfully!");
+
+            return new ResponseEntity<ResponseStructure<String>> (structure, HttpStatus.NO_CONTENT);
+        }
+
+        throw new AttendanceNotFoundException("Attendance Record for ID: " + id + " does not exist");
+    }
+
 }

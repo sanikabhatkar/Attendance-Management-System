@@ -38,4 +38,9 @@ public class AttendanceController {
         return attendanceService.viewAttendanceByDate(date);
     }
 
+    @DeleteMapping(value = "/deleteAttendance/{id}")
+    public ResponseEntity<ResponseStructure<String>> deleteAttendanceById (@RequestBody Attendance attendance, @PathVariable int id){
+        return attendanceService.deleteAttendanceById(attendance, id);
+    }
+
 }
