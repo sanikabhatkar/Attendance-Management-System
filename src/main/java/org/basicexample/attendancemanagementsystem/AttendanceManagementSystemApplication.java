@@ -30,4 +30,4 @@ public class AttendanceManagementSystemApplication {
      - Used when the request is valid, but the application cannot complete it.
      - Example: Attendance ID not found.
      - Usually returns: 404 Not Found
- */
+*/

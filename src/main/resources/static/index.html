@@ -238,6 +238,10 @@
             color: var(--ink);
         }
         .rowbtn:hover{ background: var(--ink); color: var(--paper); }
+        .idcell{
+            color: #8a9389;
+            font-size: 0.82rem;
+        }
 
         .empty{
             font-family: var(--mono);
@@ -513,10 +517,16 @@
             return;
         }
 
-        let rows = records.map(r => {
+        // Sr. No. is purely a display-position counter (index + 1) — it is
+        // NOT stored anywhere and has nothing to do with the database id.
+        // The real id (r.id) is still shown alongside it, dimmed, since
+        // that's what /updateAttendance/{id} and any future delete call
+        // actually need.
+        let rows = records.map((r, index) => {
             const statusClass = (r.status || '').toLowerCase() === 'present' ? 'present' : 'absent';
+            const srNo = index + 1;
             return `<tr>
-        <td>${r.id}</td>
+        <td>${srNo}</td>
         <td>${escapeHtml(r.name)}</td>
         <td><span class="pill ${statusClass}">${escapeHtml(r.status)}</span></td>
         <td>${escapeHtml(r.remarks)}</td>
@@ -526,7 +536,7 @@
         }).join('');
 
         holder.innerHTML = `<table>
-      <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Remarks</th><th>Date</th><th></th></tr></thead>
+      <thead><tr><th>Sr. No.</th><th>Name</th><th>Status</th><th>Remarks</th><th>Date</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
     }

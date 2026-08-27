@@ -24,7 +24,7 @@ public class AttendanceController {
     }
 
     @GetMapping(value = "/getAllAttendance")
-    public ResponseEntity<ResponseStructure<List<Attendance>>> getAllAttendance(){
+    public ResponseEntity<ResponseStructure<List<Attendance>>> getAllAttendance() {
         return attendanceService.getAllAttendance();
     }
 
